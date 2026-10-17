@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sarac studios — Architecture & Design Studio</title>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #FFFFFF;
+            --text-primary: #111111;
+            --text-muted: #777777;
+            --border-color: #E5E5E5;
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --transition-pink: #FFD1DC;
+            --nav-bg-pink: #FDE8EE;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Page Transition Curtain Overlay */
+        .page-transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--transition-pink);
+            z-index: 999999;
+            transform: translateY(-100%);
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .page-transition-overlay.animating-in {
+            pointer-events: all;
+            animation: slideDownIn 0.45s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+        }
+
+        .page-transition-overlay.animating-out {
+            pointer-events: none;
+            animation: slideUpOut 0.45s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+        }
+
+        @keyframes slideDownIn {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(0%); }
+        }
+
+        @keyframes slideUpOut {
+            0% { transform: translateY(0%); }
+            100% { transform: translateY(-100%); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .page-transition-overlay.animating-in {
+                animation: fadeInOverlay 0.2s linear forwards;
+            }
+            .page-transition-overlay.animating-out {
+                animation: fadeOutOverlay 0.2s linear forwards;
+            }
+            @keyframes fadeInOverlay {
+                0% { opacity: 0; transform: translateY(0); }
+                100% { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes fadeOutOverlay {
+                0% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(0); }
+            }
+        }
+
+        /* Native cursor using clean SVG data URI */
+        @media (min-pointer: fine) {
+            body, a, button, input, textarea {
+                cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 100 100'%3E%3Cfilter id='invert'%3E%3CfeColorMatrix type='matrix' values='-1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1  0 0 0 1 0'/%3E%3C/filter%3E%3Cimage href='https://i.postimg.cc/wMSwHJX9/Gemini-Generated-Image-xn8b8oxn8b8oxn8b.jpg' width='100' height='100' preserveAspectRatio='none' filter='url(%23invert)'/%3E%3C/svg%3E") 16 16, auto !important;
+            }
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        /* Header & Navigation with subtle pink accent */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2.2rem 4vw;
+            width: 100%;
+            background: var(--nav-bg-pink);
+            position: relative;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 182, 193, 0.3);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            text-decoration: none;
+        }
+
+        .logo {
+            font-size: 1.15rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            text-transform: lowercase;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            transition: opacity 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a:focus-visible {
+            opacity: 0.5;
+            outline: none;
+        }
+
+        /* Mobile Hamburger */
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 110;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 24px;
+            height: 1.5px;
+            background: var(--text-primary);
+            transition: transform 0.3s ease;
+        }
+
+        /* Views Container */
+        .view-section {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Main Homepage Container with generous top whitespace */
+        .homepage-container {
+            padding: 5rem 4vw 8rem 4vw;
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* Homepage Hero Section */
+        .homepage-hero-header {
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        .hero-layout-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            gap: 2rem;
+        }
+
+        .hero-title-main {
+            font-size: 4.8rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1.05;
+            color: var(--text-primary);
+            margin-bottom: 4rem;
+        }
+
+        .hero-flower-logo {
+            height: 140px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            margin-top: 1rem;
+        }
+
+        .hero-title-sub {
+            font-size: 4.8rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1.05;
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+        }
+
+        .hero-description-blurb {
+            font-size: 1.25rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            max-width: 1100px;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            margin-top: 1.5rem;
+        }
+
+        /* Editorial Masonry Gallery (Homepage) */
+        .editorial-masonry-grid {
+            column-count: 4;
+            column-gap: 12px;
+            width: 100%;
+            pointer-events: none;
+            user-select: none;
+            margin-top: 3rem;
+        }
+
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 12px;
+            width: 100%;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        .masonry-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+        }
+
+        /* ==========================================================
+            PROJECTS TAB (Reference-Matched Editorial Layout)
+            ========================================================== */
+        .projects-page-container {
+            padding: 4rem 4vw 10rem 4vw;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .projects-header-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 5rem;
+            gap: 3rem;
+        }
+
+        .projects-main-title {
+            font-size: 4.8rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1.05;
+            color: var(--text-primary);
+            text-transform: uppercase;
+        }
+
+        .projects-intro-text {
+            font-size: 1.35rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            max-width: 480px;
+            font-weight: 300;
+            padding-top: 1rem;
+        }
+
+        .projects-sub-meta-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            border-top: 1px solid var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 0;
+            margin-bottom: 0rem;
+            font-weight: 500;
+        }
+
+        /* Editorial Project Row */
+        .project-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding: 2.25rem 0;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+        }
+
+        .project-row:hover {
+            opacity: 0.75;
+        }
+
+        .project-row-left {
+            display: flex;
+            align-items: baseline;
+            gap: 3rem;
+        }
+
+        .project-row-num {
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .project-row-title {
+            font-size: 2.4rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+            line-height: 1.15;
+        }
+
+        .project-row-right {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+        }
+
+        .project-row-thumb {
+            width: 140px;
+            height: 90px;
+            background: #F4F4F4;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .project-row-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .project-row-arrow {
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: var(--text-primary);
+            width: 30px;
+            text-align: right;
+        }
+
+        /* ==========================================================
+            FULL-WIDTH PROJECT DETAIL VIEW
+            ========================================================== */
+        .detail-container {
+            padding: 3rem 4vw 8rem 4vw;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-family: var(--font-main);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Hero Intro & Main Image Split Layout */
+        .project-hero-split {
+            display: grid;
+            grid-template-columns: 1.1fr 1.4fr;
+            gap: 4rem;
+            align-items: center;
+            margin-bottom: 6rem;
+        }
+
+        .project-hero-text-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .detail-title {
+            font-size: 2.4rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+            text-transform: lowercase;
+            line-height: 1.15;
+        }
+
+        .detail-blurb {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-blurb a {
+            color: var(--text-primary);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            font-weight: 400;
+            transition: opacity 0.2s;
+        }
+
+        .detail-blurb a:hover {
+            opacity: 0.6;
+        }
+
+        .project-hero-image-col {
+            width: 100%;
+            background: #FAFAFA;
+            overflow: hidden;
+        }
+
+        .project-hero-image-col img {
+            width: 100%;
+            height: auto;
+            max-height: 850px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .project-hero-image-col img:hover {
+            transform: scale(1.01);
+        }
+
+        /* Process & Gallery Section Headings & Spacing */
+        .project-section-block {
+            margin-bottom: 6rem;
+        }
+
+        .section-heading-block {
+            max-width: 900px;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-heading-block h2 {
+            font-size: 2rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            line-height: 1.25;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .section-heading-block p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        /* Compact Multi-Column Image Grids */
+        .fullwidth-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            width: 100%;
+        }
+
+        .fullwidth-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            width: 100%;
+        }
+
+        .fullwidth-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            width: 100%;
+        }
+
+        .gallery-card-item {
+            background: #FAFAFA;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .gallery-card-item img {
+            width: 100%;
+            height: auto;
+            max-height: 750px;
+            object-fit: contain;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            margin: 0 auto;
+        }
+
+        .gallery-card-item img:hover {
+            transform: scale(1.02);
+        }
+
+        /* REM ROOM Gallery Layout */
+        .rem-room-gallery-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+            align-items: stretch;
+        }
+
+        .rem-room-col-vertical {
+            background: #FAFAFA;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rem-room-col-vertical img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .rem-room-col-stacked {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .rem-room-stacked-item {
+            background: #FAFAFA;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .rem-room-stacked-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .rem-room-col-vertical img:hover,
+        .rem-room-stacked-item img:hover {
+            transform: scale(1.02);
+        }
+
+        /* Lightbox Modal */
+        #lightboxModal {
+            display: none;
+            position: fixed;
+            z-index: 99999;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+        }
+
+        #lightboxModal.active {
+            display: flex;
+        }
+
+        #lightboxImg {
+            max-width: 90%;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 2rem;
+            right: 2.5rem;
+            background: none;
+            border: none;
+            color: #FFFFFF;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        /* ==========================================================
+            REFINED PAINTINGS SECTION
+            ========================================================== */
+        .paintings-container {
+            padding: 4rem 4vw;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .paintings-container h2 {
+            font-size: 3rem;
+            font-weight: 400;
+            letter-spacing: -0.03em;
+            margin-bottom: 3rem;
+        }
+
+        .painting-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4rem;
+            align-items: start;
+        }
+
+        .painting-card {
+            background: #FAFAFA;
+            border: 1px solid var(--border-color);
+            padding: 2.5rem 2rem 2rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .painting-image-btn {
+            background: none;
+            border: none;
+            width: 100%;
+            max-height: 550px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .painting-image-btn img {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 550px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .painting-image-btn:hover img {
+            transform: scale(1.025);
+        }
+
+        .painting-info {
+            width: 100%;
+            text-align: left;
+        }
+
+        .painting-info h3 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .painting-meta {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .painting-desc {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-weight: 300;
+        }
+
+        .buy-btn {
+            display: inline-block;
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            transition: opacity 0.2s;
+        }
+
+        .buy-btn:hover { opacity: 0.7; }
+
+        /* ==========================================================
+            AWARDS SECTION STYLES
+            ========================================================== */
+        .awards-container {
+            padding: 4rem 4vw;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .awards-container h2.section-main-heading {
+            font-size: 3rem;
+            font-weight: 400;
+            letter-spacing: -0.03em;
+            margin-bottom: 3.5rem;
+            text-transform: uppercase;
+        }
+
+        .awards-group-block {
+            margin-bottom: 4rem;
+        }
+
+        .awards-group-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--text-primary);
+            padding-bottom: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .awards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .award-item {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 2rem;
+        }
+
+        .award-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .award-item-title {
+            font-size: 1.4rem;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .award-item-subtitle {
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            margin-bottom: 0.35rem;
+        }
+
+        .award-item-desc {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        /* About Page Layout */
+        .about-container {
+            padding: 4rem 4vw;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 5rem;
+            align-items: start;
+        }
+
+        .about-image-wrapper {
+            width: 100%;
+            background: #F7F7F7;
+            overflow: hidden;
+            position: sticky;
+            top: 4rem;
+        }
+
+        .about-image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+        }
+
+        .about-content h2 {
+            font-size: 3rem;
+            font-weight: 400;
+            letter-spacing: -0.03em;
+            margin-bottom: 2rem;
+        }
+
+        .about-content p {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-weight: 300;
+        }
+
+        .about-content p:first-of-type {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1200px) {
+            .hero-title-main, .hero-title-sub, .projects-main-title {
+                font-size: 3.2rem;
+            }
+            .project-row-title, .detail-title {
+                font-size: 1.8rem;
+            }
+            .hero-description-blurb {
+                font-size: 1.15rem;
+            }
+            .editorial-masonry-grid {
+                column-count: 3;
+            }
+            .hero-flower-logo {
+                height: 100px;
+            }
+            .project-hero-split {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            .fullwidth-grid-3, .fullwidth-grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 850px) {
+            .editorial-masonry-grid {
+                column-count: 2;
+            }
+            .projects-header-wrapper {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            .project-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.5rem;
+                padding: 1.75rem 0;
+            }
+            .project-row-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .rem-room-gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 767px) {
+            header { padding: 1.8rem 2rem; }
+            
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: var(--nav-bg-pink);
+                flex-direction: column;
+                padding: 2rem;
+                gap: 1.5rem;
+                border-bottom: 1px solid var(--border-color);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            }
+            .nav-links.open { display: flex; }
+            .hamburger { display: flex; }
+
+            .homepage-container, .projects-page-container, .detail-container, .paintings-container, .awards-container, .about-container { 
+                padding: 2.5rem 2rem 5rem 2rem; 
+            }
+
+            .hero-title-main, .hero-title-sub, .projects-main-title {
+                font-size: 2.2rem;
+            }
+
+            .hero-title-main {
+                margin-bottom: 2rem;
+            }
+
+            .project-row-title, .detail-title {
+                font-size: 1.4rem;
+            }
+
+            .hero-layout-grid {
+                flex-direction: column;
+            }
+
+            .hero-flower-logo {
+                height: 80px;
+            }
+
+            .hero-description-blurb {
+                font-size: 1rem;
+            }
+
+            .editorial-masonry-grid {
+                column-count: 1;
+            }
+
+            .fullwidth-grid-2, .fullwidth-grid-3, .fullwidth-grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .painting-grid {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+
+            .painting-image-btn, .painting-image-btn img {
+                max-height: 450px;
+            }
+
+            .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+            .about-image-wrapper { position: static; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE TRANSITION CURTAIN -->
+    <div class="page-transition-overlay" id="pageTransitionOverlay"></div>
+
+    <!-- TOP HEADER & NAVIGATION -->
+    <header>
+        <a href="#" class="logo-container" onclick="switchView('home'); return false;">
+            <span class="logo">sarac studios</span>
+        </a>
+        
+        <button class="hamburger" onclick="toggleMenu()" aria-label="Toggle Navigation">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#" onclick="switchView('projects'); return false;">Projects</a></li>
+            <li><a href="#" onclick="switchView('awards'); return false;">Awards</a></li>
+            <li><a href="#" onclick="switchView('paintings'); return false;">Paintings</a></li>
+            <li><a href="#" onclick="switchView('about'); return false;">About</a></li>
+        </ul>
+    </header>
+
+    <!-- 1. MAIN STUDIO HOMEPAGE VIEW -->
+    <section id="view-home" class="view-section active">
+        <div class="homepage-container">
+            <div class="homepage-hero-header">
+                <div class="hero-layout-grid">
+                    <div>
+                        <h1 class="hero-title-main">sarac studios</h1>
+                        <h2 class="hero-title-sub">multidisciplinary portfolio</h2>
+                    </div>
+                    <img src="https://i.postimg.cc/X7HRzCsY/08d0fc53959a3aaa11818f44415d01f4.jpg" alt="Sarac Studios Flower Logo" class="hero-flower-logo">
+                </div>
+                <p class="hero-description-blurb">
+                    Sarac Studio is a multidisciplinary creative design studio focused on architecture and design. Our work spans small-scale architecture, interior spaces, installations, custom furniture, and graphic design.
+                </p>
+            </div>
+
+            <!-- 20 Homepage Images in Editorial Masonry Grid -->
+            <div class="editorial-masonry-grid">
+                <div class="masonry-item"><img src="https://i.postimg.cc/k42Q54VL/Gemini-Generated-Image-9hch5z9hch5z9hch.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/NMK60MyS/Gemini-Generated-Image-hj085dhj085dhj08.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/Kz1PYzKd/Gemini-Generated-Image-i8vp54i8vp54i8vp.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/j5DHj5W3/Gemini-Generated-Image-j9nnuoj9nnuoj9nn-(1).jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/cHvRJHKp/Whats-App-Image-2026-09-26-at-1-53-31-AM.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/QMH9QzXq/20250913-125518.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/YShG6PpR/20250916-145627.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/prYpVbZM/IMG-1276.avif" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/jjLwH1s2/IMG-7063.avif" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/G3J2yRkW/arc-395-assembly-diagram-Converted-(2)-04.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/gjD2FyzP/DSC06795.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/jqQ57Tz1/DSC06856.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/VvDmHYgd/535BF51D-9C63-4880-9AFF-D8286B1B188B.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/Dfgvzghn/DSC03328.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/ZYcbqcSg/DSC03337.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/QdP5yDY7/Gemini-Generated-Image-zhylcazhylcazhyl.jpg" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/xCGz8zf6/DSC06063.png" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/1RJ8dPfB/download-(3)-(1).png" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/8kt7YDjv/DSC06023.png" alt="Work" loading="lazy"></div>
+                <div class="masonry-item"><img src="https://i.postimg.cc/MZdnLxvb/Screenshot-2026-08-04-022533.png" alt="Work" loading="lazy"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. REDESIGNED PROJECTS OVERVIEW TAB -->
+    <section id="view-projects" class="view-section">
+        <div class="projects-page-container">
+            
+            <div class="projects-header-wrapper">
+                <h1 class="projects-main-title">Projects</h1>
+                <p class="projects-intro-text">
+                    A multidisciplinary portfolio spanning architecture, design-build, material exploration, interactive installations, and spatial experimentation.
+                </p>
+            </div>
+
+            <div class="projects-sub-meta-bar">
+                <span>Selected Work</span>
+                <span>Architectural studies, installations, and objects</span>
+            </div>
+
+            <!-- Five Project Entries matching exact order and titles -->
+            <div class="projects-list-wrapper">
+                
+                <!-- Project 01 -->
+                <a href="#" class="project-row" onclick="openDetail('the-zones'); return false;">
+                    <div class="project-row-left">
+                        <span class="project-row-num">01</span>
+                        <h2 class="project-row-title">The Zones</h2>
+                    </div>
+                    <div class="project-row-right">
+                        <div class="project-row-thumb">
+                            <img src="https://i.postimg.cc/G3J2yRkW/arc-395-assembly-diagram-Converted-(2)-04.jpg" alt="The Zones Cover" loading="lazy">
+                        </div>
+                        <span class="project-row-arrow">↗</span>
+                    </div>
+                </a>
+
+                <!-- Project 02 -->
+                <a href="#" class="project-row" onclick="openDetail('bench'); return false;">
+                    <div class="project-row-left">
+                        <span class="project-row-num">02</span>
+                        <h2 class="project-row-title">The Bench</h2>
+                    </div>
+                    <div class="project-row-right">
+                        <div class="project-row-thumb">
+                            <img src="https://i.postimg.cc/sxCJKSHg/Untitled-design.jpg" alt="The Bench Cover" loading="lazy">
+                        </div>
+                        <span class="project-row-arrow">↗</span>
+                    </div>
+                </a>
+
+                <!-- Project 03 -->
+                <a href="#" class="project-row" onclick="openDetail('one-spoon-house'); return false;">
+                    <div class="project-row-left">
+                        <span class="project-row-num">03</span>
+                        <h2 class="project-row-title">One Spoon House</h2>
+                    </div>
+                    <div class="project-row-right">
+                        <div class="project-row-thumb">
+                            <img src="https://i.postimg.cc/jj21WGFJ/Use-AI-Image-May-6-2026-00-26-47.png" alt="One Spoon House Cover" loading="lazy">
+                        </div>
+                        <span class="project-row-arrow">↗</span>
+                    </div>
+                </a>
+
+                <!-- Project 04 -->
+                <a href="#" class="project-row" onclick="openDetail('the-wall'); return false;">
+                    <div class="project-row-left">
+                        <span class="project-row-num">04</span>
+                        <h2 class="project-row-title">The Wall</h2>
+                    </div>
+                    <div class="project-row-right">
+                        <div class="project-row-thumb">
+                            <img src="https://i.postimg.cc/brLt7FH7/Whats-App-Image-2026-09-26-at-1-53-31-AM.jpg" alt="The Wall Cover" loading="lazy">
+                        </div>
+                        <span class="project-row-arrow">↗</span>
+                    </div>
+                </a>
+
+                <!-- Project 05 -->
+                <a href="#" class="project-row" onclick="openDetail('rem-room'); return false;">
+                    <div class="project-row-left">
+                        <span class="project-row-num">05</span>
+                        <h2 class="project-row-title">REM ROOM</h2>
+                    </div>
+                    <div class="project-row-right">
+                        <div class="project-row-thumb">
+                            <img src="https://i.postimg.cc/7P7DK2YW/DSC06856.jpg" alt="REM ROOM Cover" loading="lazy">
+                        </div>
+                        <span class="project-row-arrow">↗</span>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. PROJECT DETAIL VIEW -->
+    <section id="view-detail" class="view-section">
+        <div class="detail-container">
+            <div id="detailContentContainer"></div>
+        </div>
+    </section>
+
+    <!-- 4. AWARDS PAGE VIEW -->
+    <section id="view-awards" class="view-section">
+        <div class="awards-container">
+            <h2 class="section-main-heading">Awards & Education</h2>
+
+            <!-- AWARDS SECTION -->
+            <div class="awards-group-block">
+                <h3 class="awards-group-title">Awards</h3>
+                <div class="awards-list">
+                    <div class="award-item">
+                        <div class="award-item-title">TimberFever Design-Build Competition — 2nd Place</div>
+                        <div class="award-item-desc">Awarded second place for a timber pavilion design in the TimberFever Design-Build Competition, associated with David Moses and Moses Structural Engineers.</div>
+                    </div>
+
+                    <div class="award-item">
+                        <div class="award-item-title">University of Toronto — Social Technological Design Award</div>
+                        <div class="award-item-desc">Recognition for a project exploring the integration of social engagement and technology through interactive design.</div>
+                    </div>
+
+                    <div class="award-item">
+                        <div class="award-item-title">University of Toronto — $3,000 Scholarship</div>
+                        <div class="award-item-desc">Scholarship awarded in recognition of academic achievement.</div>
+                    </div>
+
+                    <div class="award-item">
+                        <div class="award-item-title">Dean’s List Scholar</div>
+                        <div class="award-item-desc">Recognition for academic achievement at the University of Toronto.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CERTIFICATES SECTION -->
+            <div class="awards-group-block">
+                <h3 class="awards-group-title">Certificates</h3>
+                <div class="awards-list">
+                    <div class="award-item">
+                        <div class="award-item-title">Certificate in Sustainability of the Built Environment</div>
+                        <div class="award-item-desc">University of Toronto, John H. Daniels Faculty of Architecture, Landscape, and Design.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EDUCATION SECTION -->
+            <div class="awards-group-block">
+                <h3 class="awards-group-title">Education</h3>
+                <div class="awards-list">
+                    <div class="award-item">
+                        <div class="award-item-title">The University of Toronto – John H. Daniels Faculty of Architecture, Landscape, and Design</div>
+                        <div class="award-item-subtitle">Honours Bachelor of Arts in Architectural Studies (BAAS), 2026</div>
+                        <div class="award-item-desc">Minor in Visual Studies.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 5. PAINTINGS PAGE VIEW -->
+    <section id="view-paintings" class="view-section">
+        <div class="paintings-container">
+            <h2>Paintings</h2>
+            <div class="painting-grid">
+                
+                <div class="painting-card">
+                    <button class="painting-image-btn" onclick="openLightbox('https://i.postimg.cc/vZdspfXK/Whats-App-Image-2026-09-26-at-1-52-49-AM.jpg')">
+                        <img src="https://i.postimg.cc/vZdspfXK/Whats-App-Image-2026-09-26-at-1-52-49-AM.jpg" alt="Don't Let It" loading="lazy">
+                    </button>
+                    <div class="painting-info">
+                        <h3>Don't Let It</h3>
+                        <div class="painting-meta">36" × 48"</div>
+                        <p class="painting-desc">
+                            This piece explores the heavy experience of negative thoughts attempting to take over.
+                        </p>
+                        <a href="mailto:sarac.studiio@gmail.com?subject=Inquiry" class="buy-btn">Email for Inquiry</a>
+                    </div>
+                </div>
+
+                <div class="painting-card">
+                    <button class="painting-image-btn" onclick="openLightbox('https://i.postimg.cc/2yrm25RK/Gemini-Generated-Image-9hgn1a9hgn1a9hgn.jpg')">
+                        <img src="https://i.postimg.cc/2yrm25RK/Gemini-Generated-Image-9hgn1a9hgn1a9hgn.jpg" alt="ahhhhhhh" loading="lazy">
+                    </button>
+                    <div class="painting-info">
+                        <h3>ahhhhhhh</h3>
+                        <div class="painting-meta">24" × 32"</div>
+                        <p class="painting-desc">
+                            An expressive exploration of intense emotion and release.
+                        </p>
+                        <a href="mailto:sarac.studiio@gmail.com?subject=Inquiry" class="buy-btn">Email for Inquiry</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. ABOUT / CONTACT VIEW -->
+    <section id="view-about" class="view-section">
+        <div class="about-container">
+            <div class="about-grid">
+                <div class="about-image-wrapper">
+                    <img src="https://i.postimg.cc/8c3YBQn8/DSC04307.jpg" alt="Sarac Studios Practice" loading="lazy">
+                </div>
+                <div class="about-content">
+                    <h2>About Sarac Studios</h2>
+                    <p><strong>Sarac Studios</strong> is a Toronto-based multidisciplinary architecture and design studio helping people turn ideas into spaces, objects, and experiences.</p>
+                    <p>We work across architecture, interiors, landscape, furniture, and graphic design, bringing ideas from the first sketch to something real.</p>
+                    <p>Whether you have a clear vision or just an idea you’re trying to figure out, we work with you to develop it into something thoughtful, functional, and uniquely yours.</p>
+                    <p>We care about the details, but we also believe design should be fun. We like experimenting with materials, pushing digital tools, and building things by hand.</p>
+                    <p style="margin-top: 2.5rem;">
+                        <a href="mailto:sarac.studiio@gmail.com" class="buy-btn">Get in touch</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightbox Modal -->
+    <div id="lightboxModal" onclick="closeLightbox()">
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        <img id="lightboxImg" src="" alt="Enlarged View">
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const projectData = {
+            'the-zones': {
+                title: 'The Zones',
+                shortDesc: 'The Zones is a collaborative design-build project with <a href="https://www.instagram.com/industrialartsmarkham/" target="_blank">Industrial Arts Markham</a> exploring the relationship between social interaction, technology, and architecture. Through experimentation with distance sensors, infrared technology, and patterns of attraction and repulsion, our team designed and built an interactive pavilion that explored the relationship between the conscious and unconscious.<br><br>The installation was presented at a University of Toronto exhibition.',
+                heroImage: 'https://i.postimg.cc/FRckH6rx/DFF8E50F-E498-440D-824D-41CE300D7C76-(1).jpg',
+                sections: [
+                    {
+                        heading: 'How can we explore the conscious and unconscious?',
+                        text: 'We explored this question through hands-on experimentation, interactive technology, and the physical act of building. Using sensor-driven interactions, the pavilion created zones of attraction and repulsion, inviting people to experience space and social interaction in new ways. The design process brought together technological experimentation, material exploration, and collaborative making.',
+                        gridClass: 'fullwidth-grid-4',
+                        images: [
+                            'https://i.postimg.cc/wvJRjrqJ/IMG-3080.jpg',
+                            'https://i.postimg.cc/tTPn4cq6/IMG-3124.jpg',
+                            'https://i.postimg.cc/V6M0khfX/Screenshot-2025-12-31-155020.png',
+                            'https://i.postimg.cc/63R4pPWv/Screenshot-2025-12-31-155105.png',
+                            'https://i.postimg.cc/257PNkvh/DSC02981.jpg',
+                            'https://i.postimg.cc/vmtpwY9n/DSC02982.jpg',
+                            'https://i.postimg.cc/fbf6QzXS/DSC02988.jpg'
+                        ]
+                    },
+                    {
+                        heading: 'Completed Pavilion & Exhibition',
+                        text: 'A visual showcase of the completed installation, spatial presence, and exhibition results.',
+                        gridClass: 'fullwidth-grid-4',
+                        images: [
+                            'https://i.postimg.cc/XJFBYPjk/B9B59CE5-C8D4-410B-87A4-D5899F011323.jpg',
+                            'https://i.postimg.cc/s2bZyzr4/Copy-of-IMG-8519.avif',
+                            'https://i.postimg.cc/3Rp0xq8P/DSC03341.jpg',
+                            'https://i.postimg.cc/9MTwQkm6/DSC03349.jpg',
+                            'https://i.postimg.cc/0QmKy4kF/DSC03364.jpg',
+                            'https://i.postimg.cc/k5mkH6V6/DSC03301.jpg',
+                            'https://i.postimg.cc/SKhwP2X9/DSC03328.jpg',
+                            'https://i.postimg.cc/k5vkPJ8t/DSC03114.jpg'
+                        ]
+                    }
+                ]
+            },
+            'bench': {
+                title: 'The Bench',
+                shortDesc: 'This modular bench was designed as an extension of the pavilion’s architectural language, with the pavilion’s “oculi” openings inspiring its form. Built at a 1:1 scale, the bench was developed using just two simple geometries: a rectangle and a circle.<br><br>Rather than treating seating as an add-on object, the bench wraps around trees and supports movement through the site. The tree becomes a shared centre, creating a comfortable edge for pausing, conversation, and informal gathering.<br><br>Structurally, a plywood frame defines the bench’s profile and keeps it lightweight, while a concrete coating gives it the weight and permanence of a cast element. The result is a simple, repeatable piece that feels both architectural and site-specific: a small intervention that organizes circulation, frames the landscape, and makes public space feel intentional.',
+                heroImage: 'https://i.postimg.cc/sxCJKSHg/Untitled-design.jpg',
+                sections: [
+                    {
+                        heading: 'How We Made It',
+                        text: 'The bench brought together digital fabrication and hands-on making. Using CNC milling, plywood construction, woodworking, and concrete, we translated a simple geometric concept into a full-scale, functional piece. The process involved developing the bench’s profile, assembling its structural frame, and applying a concrete coating to achieve its final material expression.',
+                        gridClass: 'fullwidth-grid-4',
+                        images: [
+                            'https://i.postimg.cc/T36Zh5RP/Image-(10).jpg',
+                            'https://i.postimg.cc/9QhvzwWr/IMG-0232.jpg',
+                            'https://i.postimg.cc/MpShXfWX/IMG-0259.jpg',
+                            'https://i.postimg.cc/SxhwjYyk/IMG-6887.avif'
+                        ]
+                    },
+                    {
+                        heading: 'The Completed Bench',
+                        text: 'The completed bench was presented at the University of Toronto and installed in the auditorium, where it remains in use today. Designed as both a functional seating element and a site-specific architectural intervention, the project demonstrates how simple geometries, material experimentation, and thoughtful placement can transform the way people occupy and move through a space.',
+                        gridClass: 'fullwidth-grid-3',
+                        images: [
+                            'https://i.postimg.cc/yxG4x7V8/Screenshot-2026-08-04-005337.png',
+                            'https://i.postimg.cc/xC0SFsxG/Screenshot-2026-08-14-020121.png',
+                            'https://i.postimg.cc/QCHwRvpZ/IMG-7923.avif'
+                        ]
+                    }
+                ]
+            },
+            'one-spoon-house': {
+                title: 'One Spoon House',
+                shortDesc: 'This project proposes student housing in Toronto that positions architecture as a medium for fostering ethical awareness. By revealing material origins, labor, and environmental impact, the design encourages residents to critically engage with the systems influencing daily life. Organized around shared living, the building promotes collective responsibility through daily interaction and communal spaces.<br><br>Timber and locally sourced recycled brick are employed to express cycles of use, reuse, and material continuity, embedding historical traces within the architecture. Informed by the principles of the Dish With One Spoon Treaty, the project emphasizes care, reciprocity, and accountability. As a result, the housing functions as more than shelter; it serves as a civic environment for learning, reflection, and social consciousness.<br><br><strong>Software Used:</strong> Rhino, Illustrator, Photoshop, Lumion.',
+                heroImage: 'https://i.postimg.cc/jj21WGFJ/Use-AI-Image-May-6-2026-00-26-47.png',
+                sections: [
+                    {
+                        heading: 'Floor Plans',
+                        text: 'Detailed plan drawings showing spatial layout, shared living arrangements, and circulation.',
+                        gridClass: 'fullwidth-grid-4',
+                        images: [
+                            'https://i.postimg.cc/xCyL9d34/Screenshot-2026-04-24-003808.png',
+                            'https://i.postimg.cc/50q8ftSK/Screenshot-2026-04-24-003837.png',
+                            'https://i.postimg.cc/Hx4bTL9P/Screenshot-2026-04-24-003902.png',
+                            'https://i.postimg.cc/KzrtmYDQ/Screenshot-2026-04-24-003929.png'
+                        ]
+                    },
+                    {
+                        heading: 'Architectural Models',
+                        text: 'Physical and digital model studies exploring material continuity, structural form, and massing.',
+                        gridClass: 'fullwidth-grid-2',
+                        images: [
+                            'https://i.postimg.cc/7LhRCpWz/ARC491-saraceda.png',
+                            'https://i.postimg.cc/ZqnQ91M3/Use-AI-Image-May-6-2026-00-25-55.png'
+                        ]
+                    }
+                ]
+            },
+            'the-wall': {
+                title: 'The Wall',
+                shortDesc: 'The Wall is an installation that confronts the often-overlooked waste generated by 3D printing in academic environments. Across university studios, printed models and prototypes are frequently discarded once a semester ends, despite the material and resources invested in producing them.<br><br>Using 3D-printed objects collected from the University of Toronto, the installation transforms these discarded pieces into a visual statement about material waste, consumption, and the short life cycle of design experiments. By bringing these objects together, the project invites viewers to reconsider what happens to the materials we use to design, build, and learn.<br><br>The installation advocates for more responsible 3D printing practices, particularly within educational institutions, encouraging material recovery, reuse, and recycling rather than disposal. It asks how design schools can take greater responsibility for the waste they produce and how discarded prototypes might become resources for future projects.',
+                heroImage: 'https://i.postimg.cc/brLt7FH7/Whats-App-Image-2026-09-26-at-1-53-31-AM.jpg',
+                sections: []
+            },
+            'rem-room': {
+                title: 'REM ROOM',
+                shortDesc: 'An award-winning, sleep-inspired light installation exploring the mysteries of dreaming: the aspects we can explain and those that remain beyond our understanding.<br><br>REM ROOM compresses the experience of dreaming into a timeline of minutes. The longer a participant remains inside the installation, the deeper the experience becomes, with light evolving into something brighter, richer, and more intense. Through this gradual transformation, the installation invites visitors to reflect on the relationship between time, perception, and the subconscious.<br><br>The installation\'s projection and sensing systems were developed in TouchDesigner, integrating ml5.js and webcam-based person detection to create a responsive, immersive environment that evolves with the participant\'s presence.',
+                heroImage: 'https://i.postimg.cc/7P7DK2YW/DSC06856.jpg',
+                sections: [
+                    {
+                        heading: 'Research & Interaction',
+                        text: 'REM ROOM investigates how an immersive environment can translate an intangible experience like dreaming into a spatial and sensory sequence. The project explores the relationship between time, human presence, and changing light, using responsive technology to make the installation feel increasingly immersive as visitors remain inside it.<br><br>A webcam-based person-detection system, developed using ml5.js and TouchDesigner, enables the installation to respond to participants in real time. This sensing system connects human presence to the installation\'s evolving visual intensity, translating an invisible process into a tangible spatial experience. The project brings together research, interactive technology, projection, and light to explore how architecture and digital media can shape perception.',
+                        gridClass: 'fullwidth-grid-2',
+                        images: [
+                            'https://i.postimg.cc/9FrP3Csc/Screenshot-2026-10-16-222725.png',
+                            'https://i.postimg.cc/bNs0Xp48/Screenshot-2026-10-16-222803.png'
+                        ]
+                    },
+                    {
+                        heading: 'Installation Photography',
+                        text: 'Spatial atmosphere, dynamic lighting sequences, and immersive presence within the finished REM ROOM.',
+                        isRemRoomGallery: true,
+                        verticalImage: 'https://i.postimg.cc/pV8xsFXB/IMG-1432.jpg',
+                        stackedImages: [
+                            'https://i.postimg.cc/jqNKM7d3/DSC06728.jpg',
+                            'https://i.postimg.cc/QN5sfTxn/DSC06795.jpg'
+                        ]
+                    }
+                ]
+            }
+        };
+
+        let isTransitioning = false;
+
+        function runPageTransition(callback) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+
+            const overlay = document.getElementById('pageTransitionOverlay');
+            overlay.classList.remove('animating-in', 'animating-out');
+            
+            void overlay.offsetWidth;
+
+            overlay.classList.add('animating-in');
+
+            setTimeout(() => {
+                if (typeof callback === 'function') {
+                    callback();
+                }
+
+                overlay.classList.remove('animating-in');
+                void overlay.offsetWidth;
+                overlay.classList.add('animating-out');
+
+                setTimeout(() => {
+                    overlay.classList.remove('animating-out');
+                    isTransitioning = false;
+                }, 450);
+            }, 450);
+        }
+
+        function switchView(viewId) {
+            runPageTransition(() => {
+                document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+                if (viewId === 'contact') {
+                    viewId = 'about';
+                }
+                const target = document.getElementById('view-' + viewId);
+                if (target) {
+                    target.classList.add('active');
+                    window.scrollTo({ top: 0, behavior: 'auto' });
+                }
+                const navLinks = document.getElementById('navLinks');
+                if (navLinks.classList.contains('open')) {
+                    navLinks.classList.remove('open');
+                }
+            });
+        }
+
+        function openDetail(projectId) {
+            const project = projectData[projectId];
+            if (!project) return;
+
+            runPageTransition(() => {
+                let htmlContent = `
+                    <button class="back-btn" onclick="switchView('projects'); return false;">← Back to Projects</button>
+                    
+                    <!-- 1. Hero Intro & Main Image Split Layout -->
+                    <div class="project-hero-split">
+                        <div class="project-hero-text-col">
+                            <h1 class="detail-title">${project.title}</h1>
+                            <div class="detail-blurb">${project.shortDesc}</div>
+                        </div>
+                        <div class="project-hero-image-col">
+                            <img src="${project.heroImage}" alt="${project.title}" loading="lazy" onclick="openLightbox('${project.heroImage}')">
+                        </div>
+                    </div>
+                `;
+
+                // Render dynamic sections
+                if (project.sections && project.sections.length > 0) {
+                    project.sections.forEach(sec => {
+                        if (sec.isRemRoomGallery) {
+                            htmlContent += `
+                                <div class="project-section-block">
+                                    <div class="section-heading-block">
+                                        <h2>${sec.heading}</h2>
+                                        <p>${sec.text}</p>
+                                    </div>
+                                    <div class="rem-room-gallery-grid">
+                                        <div class="rem-room-col-vertical">
+                                            <img src="${sec.verticalImage}" alt="REM ROOM Vertical" loading="lazy" onclick="openLightbox('${sec.verticalImage}')">
+                                        </div>
+                                        <div class="rem-room-col-stacked">
+                                            <div class="rem-room-stacked-item">
+                                                <img src="${sec.stackedImages[0]}" alt="REM ROOM Horizontal 1" loading="lazy" onclick="openLightbox('${sec.stackedImages[0]}')">
+                                            </div>
+                                            <div class="rem-room-stacked-item">
+                                                <img src="${sec.stackedImages[1]}" alt="REM ROOM Horizontal 2" loading="lazy" onclick="openLightbox('${sec.stackedImages[1]}')">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (sec.images && sec.images.length > 0) {
+                            htmlContent += `
+                                <div class="project-section-block">
+                                    <div class="section-heading-block">
+                                        <h2>${sec.heading}</h2>
+                                        <p>${sec.text}</p>
+                                    </div>
+                                    <div class="${sec.gridClass || 'fullwidth-grid-4'}">
+                            `;
+                            sec.images.forEach(imgUrl => {
+                                htmlContent += `
+                                    <div class="gallery-card-item">
+                                        <img src="${imgUrl}" alt="${sec.heading}" loading="lazy" onclick="openLightbox('${imgUrl}')">
+                                    </div>
+                                `;
+                            });
+                            htmlContent += `</div></div>`;
+                        }
+                    });
+                }
+
+                document.getElementById('detailContentContainer').innerHTML = htmlContent;
+                
+                document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+                const target = document.getElementById('view-detail');
+                if (target) {
+                    target.classList.add('active');
+                    window.scrollTo({ top: 0, behavior: 'auto' });
+                }
+            });
+        }
+
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('open');
+        }
+
+        function openLightbox(imgUrl) {
+            const modal = document.getElementById('lightboxModal');
+            const modalImg = document.getElementById('lightboxImg');
+            modalImg.src = imgUrl;
+            modal.classList.add('active');
+        }
+
+        function closeLightbox() {
+            const modal = document.getElementById('lightboxModal');
+            modal.classList.remove('active');
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+    </script>
+</body>
+</html>
